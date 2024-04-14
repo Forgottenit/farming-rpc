@@ -3,16 +3,17 @@ syntax = "proto3";
 package farm;
 
 service FarmManagement {
-  rpc GetWaterLevel(WaterRequest) returns (WaterResponse) {}
+  rpc GetWaterLevel(WaterRequest) returns (WaterResponse) {} // Unary RPC for water level
   rpc MonitorTemperature(TempStreamRequest) returns (stream TemperatureResponse) {}  // Server streaming for temperature monitoring
+  rpc ReportHealth(stream HealthReport) returns (HealthSummary) {}  // Client streaming for health reporting
 }
 // Request message for getting water level
 message WaterRequest {
-  string sensorId = 1;
+  string sensorId = 1; //Id of the water sensor
 }
 // Response message for water levels
 message WaterResponse {
-  float level = 1;
+  float level = 1; // water level 
 }
 
 // Request message for temp
@@ -21,4 +22,21 @@ message TempStreamRequest {}
 // Response message for temp value
 message TemperatureResponse {
   float temperature = 1;
+}
+
+// Message for reporting health status of a farm animal
+message HealthReport {
+  string reportId = 1;           // Report ID   
+  string type = 2;               // Type of animal
+  string animalId = 3;            // ID number of the animal
+  string healthDescription = 4;  // Detailed health report   
+}
+
+// Summary response for ReportHealth, includes a summary of all reports received
+message HealthSummary {
+  repeated ReportInfo reports = 1;
+}
+message ReportInfo {
+  int32 reportId = 1;  // Report number as integer
+  string details = 2;  // Details or summary of the report
 }
