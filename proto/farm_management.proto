@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package farm;
+
+service FarmManagement {
+  rpc GetWaterLevel(WaterRequest) returns (WaterResponse) {}
+}
+
+message WaterRequest {
+  string sensorId = 1;
+}
+
+message WaterResponse {
+  float level = 1;
+}
