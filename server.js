@@ -4,97 +4,114 @@ const inventory = {
   corn: 1000,
   wheat: 1500,
 };
+
 // Load the proto file using protoLoader
 const packageDefinition = protoLoader.loadSync(
   "./proto/farm_management.proto",
   {}
 );
+
 // Load the FarmManagement service definition from the proto file
 const farmProto = grpc.loadPackageDefinition(packageDefinition).farm;
+
 // Create a new gRPC server
 const server = new grpc.Server();
+
 // Add the FarmManagement service to the server
 server.addService(farmProto.FarmManagement.service, {
-  // Implement Unary RPC
+  // Implement Unary RPC with error handling
   GetWaterLevel: (call, callback) => {
-    console.log("Fetching water level for sensor:", call.request.sensorId);
-    callback(null, { level: 2 });
+    try {
+      console.log("Fetching water level for sensor:", call.request.sensorId);
+      // If can't find sensor ID
+      if (!call.request.sensorId) {
+        throw new Error("Sensor ID is required");
+      }
+      callback(null, { level: 2 });
+    } catch (err) {
+      // Return an error to the client
+      callback({
+        code: grpc.status.INVALID_ARGUMENT,
+        message: err.message,
+      });
+    }
   }, //GetWaterLevel
 
-  // Implement Server-side Streaming RPC
+  // Implement Server-side Streaming RPC with error handling
   MonitorTemperature: (call) => {
-    const temperatures = [20, 21, 22, 21, 24, 25, 22];
-    temperatures.forEach((temp) => {
-      call.write({ temperature: temp });
-    });
-    call.end();
+    try {
+      const temperatures = [20, 21, 22, 21, 24, 25, 22];
+      temperatures.forEach((temp) => {
+        call.write({ temperature: temp });
+      });
+      call.end();
+    } catch (err) {
+      call.end(new Error("Failed to send temperature data: " + err.message));
+    }
   }, //MonitorTemperature
 
-  // Implement Client-side Streaming RPC for ReportHealth
+  // Implement Client-side Streaming RPC with error handling for ReportHealth
   ReportHealth: (call, callback) => {
-    // Create an array to store the health reports
     let reports = [];
-    // Receive health reports from the client
     call.on("data", (report) => {
-      console.log(
-        `Received health report: ID=${report.reportId}, Type=${report.type}, Animal ID=${report.animalId}, Description=${report.healthDescription}`
-      );
-      // Create a ReportInfo object and add it to the reports array
-      reports.push({
-        reportId: report.reportId,
-        details: `Type=${report.type}, Animal ID=${report.animalId}, Description=${report.healthDescription}`,
-      });
+      // Try Process each health report
+      try {
+        console.log(
+          `Received health report: ID=${report.reportId}, Type=${report.type}, Animal ID=${report.animalId}, Description=${report.healthDescription}`
+        );
+        reports.push({
+          reportId: report.reportId,
+          details: `Type=${report.type}, Animal ID=${report.animalId}, Description=${report.healthDescription}`,
+        });
+      } catch (err) {
+        console.error("Error processing report:", err);
+      }
     });
-    // When the client finishes sending reports, send the HealthSummary back
     call.on("end", () => {
-      console.log("Finished receiving health reports.");
-      // Send the HealthSummary with all ReportInfo data back to the client
-      console.log(
-        "Sending back health summary:",
-        JSON.stringify({ reports: reports })
-      );
-      callback(null, { reports: reports });
+      try {
+        console.log("Finished receiving health reports.");
+        console.log(
+          "Sending back health summary:",
+          JSON.stringify({ reports: reports })
+        );
+        callback(null, { reports: reports });
+      } catch (err) {
+        callback({
+          code: grpc.status.INTERNAL,
+          message: "Failed to compile health reports: " + err.message,
+        });
+      }
     });
-    // Handle errors
     call.on("error", (err) => {
       console.error("Error during ReportHealth:", err);
     });
   }, //ReportHealth
 
-  // Implement Bidirectional Streaming RPC
+  // Implement Bidirectional Streaming RPC with error handling
   ManageFeed: (call) => {
     call.on("data", (request) => {
-      console.log("Received feed request:", request);
-      call.write({
-        status: `Processed request for ${request.quantity} units of ${request.type}`,
-      });
-    });
-    call.on("end", () => {
-      call.end();
-    });
-  },
-  // Implement Bidirectional Streaming RPC
-  ManageFeed: (call) => {
-    call.on("data", (request) => {
-      console.log("Received feed request:", request);
-      if (inventory[request.type] !== undefined) {
-        if (inventory[request.type] >= request.quantity) {
-          inventory[request.type] -= request.quantity; // Decrease inventory
-          call.write({
-            status: `Processed request for ${request.quantity} units of ${
-              request.type
-            }. Remaining: ${inventory[request.type]}`,
-          });
-        } else {
+      try {
+        console.log("Received feed request:", request);
+        if (inventory[request.type] === undefined) {
+          throw new Error(`No such feed type: ${request.type}`);
+        }
+        if (inventory[request.type] < request.quantity) {
           call.write({
             status: `Not enough stock for ${request.type}. Available: ${
               inventory[request.type]
             }`,
           });
+        } else {
+          inventory[request.type] -= request.quantity;
+          call.write({
+            status: `Processed request for ${request.quantity} units of ${
+              request.type
+            }. Remaining: ${inventory[request.type]}`,
+          });
         }
-      } else {
+      } catch (err) {
         call.write({
-          status: `No such feed type: ${request.type}`,
+          status: err.message,
         });
       }
     });
@@ -103,18 +120,29 @@ server.addService(farmProto.FarmManagement.service, {
     });
   }, //ManageFeed
 
-  // Implement Server-side Streaming RPC
+  // Implement Server-side Streaming RPC with error handling
   GetInventory: (call, callback) => {
-    console.log("Fetching inventory levels");
-    callback(null, { inventory: inventory });
+    try {
+      console.log("Fetching inventory levels");
+      callback(null, { inventory: inventory });
+    } catch (err) {
+      callback({
+        code: grpc.status.INTERNAL,
+        message: "Failed to fetch inventory: " + err.message,
+      });
+    }
   }, //GetInventory
 }); //addService
+
 // Start the server
 server.bindAsync(
   "0.0.0.0:50051",
   grpc.ServerCredentials.createInsecure(),
   (error, port) => {
-    if (error) throw error;
+    if (error) {
+      console.error("Server failed to start:", error);
+      return;
+    }
     server.start();
     console.log(`Server running at http://0.0.0.0:${port}`);
   }
