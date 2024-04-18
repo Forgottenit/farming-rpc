@@ -29,7 +29,7 @@ function getWaterLevel(sensorId, callback) {
 function monitorTemperature(callback) {
   const call = client.MonitorTemperature({});
   call.on("data", (response) => {
-    console.log(`Temperature: ${response.temperature}`);
+    console.log(`Temperature: ${response.temperature}C`);
   });
   call.on("end", () => {
     console.log("Stream ended.");
@@ -45,7 +45,7 @@ function reportHealth(callback) {
   function gatherReports() {
     rl.question("Enter Animal type (or 'done' to finish): ", (type) => {
       if (type.toLowerCase() === "done") {
-        sendReportsToServer();
+        sendHealthReportsToServer();
         return;
       }
       rl.question("Enter animal ID: ", (id) => {
@@ -63,7 +63,7 @@ function reportHealth(callback) {
     });
   }
   // Send the health reports to the server
-  function sendReportsToServer() {
+  function sendHealthReportsToServer() {
     console.log("Sending reports to server...");
     const call = client.ReportHealth((error, response) => {
       if (error) {
@@ -88,6 +88,36 @@ function reportHealth(callback) {
 
   gatherReports(); // Initial call to start gathering reports
 }
+// ManageFeed - streams feed requests to the server
+function manageFeed(requests, callback) {
+  const call = client.ManageFeed();
+
+  call.on("data", (response) => {
+    console.log(`Feed status: ${response.status}`);
+  });
+
+  call.on("end", () => {
+    console.log("Stream ended.");
+    callback(); // Call callback after operation is complete
+  });
+
+  requests.forEach((req) => {
+    call.write({ type: req.type, quantity: req.quantity });
+  });
+  call.end();
+}
+// CheckInventory - retrieves the current inventory levels
+function checkInventory(callback) {
+  client.GetInventory({}, (error, response) => {
+    if (error) {
+      console.error("Error fetching inventory:", error);
+    } else {
+      console.log(`Inventory Levels: ${JSON.stringify(response.inventory)}`);
+    }
+    callback(); // Call callback after operation is complete
+  });
+}
+
 // Create a readline interface for user input
 const rl = readline.createInterface({
   input: process.stdin,
@@ -95,10 +125,12 @@ const rl = readline.createInterface({
 });
 // Main function to display options and process user input
 function main() {
-  console.log("Select an Operation:");
+  console.log("\nSelect an Operation:");
   console.log("1. Get Water Level");
-  console.log("2. Monitor Temperature");
+  console.log("2. Monitor Temperature for last 7 days");
   console.log("3. Report Health");
+  console.log("4. Feed Animals");
+  console.log("5. Check Inventory");
   console.log("6. Exit");
 
   rl.question("Enter your choice: ", function (choice) {
@@ -123,6 +155,18 @@ function processChoice(choice, callback) {
       break;
     case "3":
       reportHealth(callback);
+      break;
+    case "4":
+      manageFeed(
+        [
+          { type: "corn", quantity: 10 },
+          { type: "wheat", quantity: 15 },
+        ],
+        callback
+      );
+      break;
+    case "5":
+      checkInventory(callback);
       break;
 
     default:

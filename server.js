@@ -1,5 +1,9 @@
 const grpc = require("@grpc/grpc-js");
 const protoLoader = require("@grpc/proto-loader");
+const inventory = {
+  corn: 1000,
+  wheat: 1500,
+};
 // Load the proto file using protoLoader
 const packageDefinition = protoLoader.loadSync(
   "./proto/farm_management.proto",
@@ -19,7 +23,7 @@ server.addService(farmProto.FarmManagement.service, {
 
   // Implement Server-side Streaming RPC
   MonitorTemperature: (call) => {
-    const temperatures = [20, 21, 22, 23, 24, 25];
+    const temperatures = [20, 21, 22, 21, 24, 25, 22];
     temperatures.forEach((temp) => {
       call.write({ temperature: temp });
     });
@@ -56,6 +60,54 @@ server.addService(farmProto.FarmManagement.service, {
       console.error("Error during ReportHealth:", err);
     });
   }, //ReportHealth
+
+  // Implement Bidirectional Streaming RPC
+  ManageFeed: (call) => {
+    call.on("data", (request) => {
+      console.log("Received feed request:", request);
+      call.write({
+        status: `Processed request for ${request.quantity} units of ${request.type}`,
+      });
+    });
+    call.on("end", () => {
+      call.end();
+    });
+  },
+  // Implement Bidirectional Streaming RPC
+  ManageFeed: (call) => {
+    call.on("data", (request) => {
+      console.log("Received feed request:", request);
+      if (inventory[request.type] !== undefined) {
+        if (inventory[request.type] >= request.quantity) {
+          inventory[request.type] -= request.quantity; // Decrease inventory
+          call.write({
+            status: `Processed request for ${request.quantity} units of ${
+              request.type
+            }. Remaining: ${inventory[request.type]}`,
+          });
+        } else {
+          call.write({
+            status: `Not enough stock for ${request.type}. Available: ${
+              inventory[request.type]
+            }`,
+          });
+        }
+      } else {
+        call.write({
+          status: `No such feed type: ${request.type}`,
+        });
+      }
+    });
+    call.on("end", () => {
+      call.end();
+    });
+  }, //ManageFeed
+
+  // Implement Server-side Streaming RPC
+  GetInventory: (call, callback) => {
+    console.log("Fetching inventory levels");
+    callback(null, { inventory: inventory });
+  }, //GetInventory
 }); //addService
 // Start the server
 server.bindAsync(

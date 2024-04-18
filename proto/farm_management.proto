@@ -6,6 +6,8 @@ service FarmManagement {
   rpc GetWaterLevel(WaterRequest) returns (WaterResponse) {} // Unary RPC for water level
   rpc MonitorTemperature(TempStreamRequest) returns (stream TemperatureResponse) {}  // Server streaming for temperature monitoring
   rpc ReportHealth(stream HealthReport) returns (HealthSummary) {}  // Client streaming for health reporting
+  rpc ManageFeed(stream FeedRequest) returns (stream FeedResponse) {}  // Bi-directional streaming for feed management
+  rpc GetInventory(InventoryRequest) returns (InventoryResponse) {}  // Unary RPC for inventory checking
 }
 // Request message for getting water level
 message WaterRequest {
@@ -38,5 +40,24 @@ message HealthSummary {
 }
 message ReportInfo {
   int32 reportId = 1;  // Report number as integer
-  string details = 2;  // Details or summary of the report
+  string details = 2;  // Details / summary of the report
+}
+
+// Request message for managing feed, includes type and quantity of feed
+message FeedRequest {
+  string type = 1;     // Type of feed
+  int32 quantity = 2;  // Quantity of the feed
+}
+
+// Response message for ManageFeed, includes a status update after processing the feed request
+message FeedResponse {
+  string status = 1;
+}
+
+// Request message for getting inventory; can be empty if no specific parameters are needed
+message InventoryRequest {}
+
+// Response message for GetInventory, includes a map of item names to their quantities
+message InventoryResponse {
+  map<string, int32> inventory = 1;
 }
