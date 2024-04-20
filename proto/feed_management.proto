@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package farm.feed_management;
+
+service FeedManagement {
+  rpc ManageFeed(stream FeedRequest) returns (stream FeedResponse) {}  // Bi-directional streaming for feed management
+  rpc GetInventory(InventoryRequest) returns (InventoryResponse) {}  // Unary RPC for inventory checking
+}
+
+
+// Request message for managing feed, includes type and quantity of feed
+message FeedRequest {
+  string type = 1;     // Type of feed
+  int32 quantity = 2;  // Quantity of the feed
+}
+
+// Response message for ManageFeed, includes a status update after processing the feed request
+message FeedResponse {
+  string status = 1;
+}
+
+// Request message for getting inventory; can be empty if no specific parameters are needed
+message InventoryRequest {}
+
+// Response message for GetInventory, includes a map of item names to their quantities
+message InventoryResponse {
+  map<string, int32> inventory = 1;
+}

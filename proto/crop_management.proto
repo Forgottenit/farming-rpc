@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package farm.crop_management;
+
+service CropManagement {
+  rpc GetWaterLevel(WaterRequest) returns (WaterResponse) {} // Unary RPC for water level
+  rpc MonitorTemperature(TempStreamRequest) returns (stream TemperatureResponse) {}  // Server streaming for temperature monitoring
+
+}
+// Request message for getting water level
+message WaterRequest {
+  string sensorId = 1; //Id of the water sensor
+}
+// Response message for water levels
+message WaterResponse {
+  float level = 1; // water level 
+}
+
+// Request message for temp
+message TempStreamRequest {}
+
+// Response message for temp value
+message TemperatureResponse {
+  float temperature = 1;
+}
+
