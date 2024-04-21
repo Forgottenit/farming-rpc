@@ -1,25 +1,12 @@
 const grpc = require("@grpc/grpc-js");
-const protoLoader = require("@grpc/proto-loader");
+const { feedServer, feedProto } = require("./serverInstances");
 const inventory = {
   corn: 1000,
   hay: 1500,
 };
 
-// Load the proto file using protoLoader
-const packageDefinition = protoLoader.loadSync(
-  "./proto/feed_management.proto",
-  {}
-);
-
-// Load the Feed Management service definition from the proto file
-const feedProto =
-  grpc.loadPackageDefinition(packageDefinition).farm.feed_management;
-
-// Create a new gRPC server
-const server = new grpc.Server();
-
 // Add the FarmManagement service to the server
-server.addService(feedProto.FeedManagement.service, {
+feedServer.addService(feedProto.FeedManagement.service, {
   // Implement Bidirectional Streaming RPC with error handling
   ManageFeed: (call) => {
     call.on("data", (request) => {
@@ -68,7 +55,7 @@ server.addService(feedProto.FeedManagement.service, {
 }); //addService
 
 // Start the server
-server.bindAsync(
+feedServer.bindAsync(
   "0.0.0.0:50052",
   grpc.ServerCredentials.createInsecure(),
   (error, port) => {
@@ -76,7 +63,7 @@ server.bindAsync(
       console.error("Server failed to start:", error);
       return;
     }
-    server.start();
+    feedServer.start();
     console.log(`Feed Management Server running at http://0.0.0.0:${port}`);
   }
 ); //bindAsync

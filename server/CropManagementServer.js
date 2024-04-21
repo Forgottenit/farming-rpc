@@ -1,21 +1,8 @@
 const grpc = require("@grpc/grpc-js");
-const protoLoader = require("@grpc/proto-loader");
-
-// Load the proto file using protoLoader
-const packageDefinition = protoLoader.loadSync(
-  "./proto/crop_management.proto",
-  {}
-);
-
-// Load the Crop Management service definition from the proto file
-const farmProto =
-  grpc.loadPackageDefinition(packageDefinition).farm.crop_management;
-
-// Create a new gRPC server
-const server = new grpc.Server();
+const { cropServer, cropProto } = require("./serverInstances");
 
 // Add the FarmManagement service to the server
-server.addService(farmProto.CropManagement.service, {
+cropServer.addService(cropProto.CropManagement.service, {
   // Unary RPC with error handling for water level
   GetWaterLevel: (call, callback) => {
     try {
@@ -82,7 +69,7 @@ server.addService(farmProto.CropManagement.service, {
 }); //addService
 
 // Start the server
-server.bindAsync(
+cropServer.bindAsync(
   "0.0.0.0:50051",
   grpc.ServerCredentials.createInsecure(),
   (error, port) => {
@@ -90,7 +77,7 @@ server.bindAsync(
       console.error("Server failed to start:", error);
       return;
     }
-    server.start();
+    cropServer.start();
     console.log(`Server running at http://0.0.0.0:${port}`);
   }
 ); //bindAsync

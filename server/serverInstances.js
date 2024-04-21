@@ -9,6 +9,7 @@ const protoOptions = {
   oneofs: true,
 };
 
+// Load proto definitions
 const cropManagementDefinition = protoLoader.loadSync(
   "./proto/crop_management.proto",
   protoOptions
@@ -22,6 +23,7 @@ const healthManagementDefinition = protoLoader.loadSync(
   protoOptions
 );
 
+// Load package definitions
 const cropProto = grpc.loadPackageDefinition(cropManagementDefinition).farm
   .crop_management;
 const feedProto = grpc.loadPackageDefinition(feedManagementDefinition).farm
@@ -29,21 +31,16 @@ const feedProto = grpc.loadPackageDefinition(feedManagementDefinition).farm
 const healthProto = grpc.loadPackageDefinition(healthManagementDefinition).farm
   .health_management;
 
-const cropClient = new cropProto.CropManagement(
-  "localhost:50051",
-  grpc.credentials.createInsecure()
-);
-const feedClient = new feedProto.FeedManagement(
-  "localhost:50052",
-  grpc.credentials.createInsecure()
-);
-const healthClient = new healthProto.HealthManagement(
-  "localhost:50053",
-  grpc.credentials.createInsecure()
-);
+// Create server instances
+const cropServer = new grpc.Server();
+const feedServer = new grpc.Server();
+const healthServer = new grpc.Server();
 
 module.exports = {
-  cropClient,
-  feedClient,
-  healthClient,
+  cropServer,
+  feedServer,
+  healthServer,
+  cropProto,
+  feedProto,
+  healthProto,
 };

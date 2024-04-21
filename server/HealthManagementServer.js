@@ -1,21 +1,8 @@
 const grpc = require("@grpc/grpc-js");
-const protoLoader = require("@grpc/proto-loader");
-
-// Load the proto file using protoLoader
-const packageDefinition = protoLoader.loadSync(
-  "./proto/health_management.proto",
-  {}
-);
-
-// Load the Health Management service definition from the proto file
-const farmProto =
-  grpc.loadPackageDefinition(packageDefinition).farm.health_management;
-
-// Create a new gRPC server
-const server = new grpc.Server();
+const { healthServer, healthProto } = require("./serverInstances");
 
 // Add the FarmManagement service to the server
-server.addService(farmProto.HealthManagement.service, {
+healthServer.addService(healthProto.HealthManagement.service, {
   // Implement Client-side Streaming RPC with error handling for ReportHealth
   ReportHealth: (call, callback) => {
     let reports = [];
@@ -55,7 +42,7 @@ server.addService(farmProto.HealthManagement.service, {
 }); //addService
 
 // Start the server
-server.bindAsync(
+healthServer.bindAsync(
   "0.0.0.0:50053",
   grpc.ServerCredentials.createInsecure(),
   (error, port) => {
@@ -63,7 +50,7 @@ server.bindAsync(
       console.error("Server failed to start:", error);
       return;
     }
-    server.start();
+    healthServer.start();
     console.log(`Server running at http://0.0.0.0:${port}`);
   }
 ); //bindAsync
