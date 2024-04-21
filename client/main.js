@@ -8,8 +8,8 @@ const rl = require("./utils/readlineInterface");
 
 function main() {
   console.log("\nSelect an Operation:");
-  console.log("1. Get Water Level");
-  console.log("2. Monitor Temperature for last 7 days");
+  console.log("1. Get Water Levels");
+  console.log("2. Get Temperature Levels");
   console.log("3. Report Health");
   console.log("4. Feed Animals");
   console.log("5. Check Inventory");
@@ -23,17 +23,24 @@ function main() {
 function processChoice(choice, callback) {
   switch (choice) {
     case "1":
-      getWaterLevel("sensor123", (err) => {
-        if (err) console.log("Operation failed");
+      getWaterLevel((err, level) => {
+        if (err) {
+          console.log("\nOperation failed", err);
+        }
         callback();
       });
       break;
     case "2":
-      monitorTemperature(() => callback());
+      monitorTemperature((err) => {
+        if (err) {
+          console.log("\nOperation failed:", err.message);
+        }
+        callback();
+      });
       break;
     case "3":
       reportHealth((err) => {
-        if (err) console.log("Operation failed");
+        if (err) console.log("\nOperation failed");
         callback();
       });
       break;

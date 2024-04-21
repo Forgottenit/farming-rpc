@@ -28,6 +28,10 @@ cd <farming-rpc>
 npm install
 ```
 
+```bash
+npm install prompt-sync
+```
+
 ### Running the Services
 
 To start each gRPC server, run the following commands in separate terminal windows:

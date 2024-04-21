@@ -11,16 +11,20 @@ service CropManagement {
 message WaterRequest {
   string sensorId = 1; //Id of the water sensor
 }
-// Response message for water levels
+
+// Response message for water levels - string because it is passing back the formatted value
 message WaterResponse {
-  float level = 1; // water level 
+  string level = 1; // water level 
 }
 
 // Request message for temp
-message TempStreamRequest {}
+message TempStreamRequest {
+    string option = 1;  // Could be "average", "weekly", or "today"
+} 
 
 // Response message for temp value
 message TemperatureResponse {
   float temperature = 1;
+  int32 day = 2; // For weekly temperature
 }
 

@@ -31,4 +31,8 @@ const healthClient = new healthProto.HealthManagement(
   grpc.credentials.createInsecure()
 );
 
-module.exports = { cropClient, feedClient, healthClient };
+module.exports = {
+  cropClient,
+  feedClient,
+  healthClient,
+};

@@ -16,17 +16,26 @@ const server = new grpc.Server();
 
 // Add the FarmManagement service to the server
 server.addService(farmProto.CropManagement.service, {
-  // Implement Unary RPC with error handling
+  // Unary RPC with error handling for water level
   GetWaterLevel: (call, callback) => {
     try {
       console.log("Fetching water level for sensor:", call.request.sensorId);
-      // If can't find sensor ID
+
+      // Check if the sensor ID is provided
       if (!call.request.sensorId) {
         throw new Error("Sensor ID is required");
       }
-      callback(null, { level: 2 });
+
+      // Simulate fetching or calculating the water level
+      let level = Math.random() * 5; // Random level between 20 and 100
+      let formattedLevel = level.toFixed(2);
+      // Send the response back to the client with the calculated level
+      callback(null, { level: formattedLevel });
+      console.log(
+        `Water level for sensor ${call.request.sensorId}: ${formattedLevel} inches`
+      );
     } catch (err) {
-      // Return an error to the client
+      // Handle any errors by sending an appropriate message back to the client
       callback({
         code: grpc.status.INVALID_ARGUMENT,
         message: err.message,
@@ -34,18 +43,42 @@ server.addService(farmProto.CropManagement.service, {
     }
   }, //GetWaterLevel
 
-  // Implement Server-side Streaming RPC with error handling
+  // Server-side Streaming RPC for monitoring temperature
   MonitorTemperature: (call) => {
     try {
-      const temperatures = [20, 21, 22, 21, 24, 25, 22];
-      temperatures.forEach((temp) => {
-        call.write({ temperature: temp });
-      });
+      let option = call.request.option;
+      let temperature;
+
+      switch (option) {
+        case "Average":
+          temperature = Math.random() * 8 + 5;
+          console.log(`Sending average temperature: ${temperature}°C`);
+          call.write({ temperature: temperature });
+          break;
+
+        case "Week":
+          for (let i = 1; i <= 7; i++) {
+            temperature = Math.random() * 8 + 2;
+            console.log(`Sending weekly temperature: ${temperature}°C`);
+            call.write({ temperature: temperature, day: i });
+          }
+          break;
+
+        case "Today":
+          temperature = Math.random() * 8 + 4;
+          console.log(`Sending todays temperature: ${temperature}°C`);
+          call.write({ temperature: temperature });
+          break;
+
+        default:
+          call.write({ temperature: "Invalid option" });
+          break;
+      }
       call.end();
     } catch (err) {
       call.end(new Error("Failed to send temperature data: " + err.message));
     }
-  }, //MonitorTemperature
+  },
 }); //addService
 
 // Start the server
