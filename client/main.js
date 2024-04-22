@@ -23,7 +23,7 @@ function main() {
 function processChoice(choice, callback) {
   switch (choice) {
     case "1":
-      getWaterLevel((err, level) => {
+      getWaterLevel((err) => {
         if (err) {
           console.log("\nOperation failed", err);
         }
@@ -40,7 +40,9 @@ function processChoice(choice, callback) {
       break;
     case "3":
       reportHealth((err) => {
-        if (err) console.log("\nOperation failed");
+        if (err) {
+          console.log("\nOperation failed");
+        }
         callback();
       });
       break;
@@ -56,9 +58,14 @@ function processChoice(choice, callback) {
     case "5":
       checkInventory(callback);
       break;
-
+    case "6":
+      console.log("\nExiting application.");
+      //close the readline interface
+      rl.close();
+      //exit the process
+      process.exit(0);
     default:
-      console.log("Invalid choice. Please choose again.");
+      console.log("\nInvalid choice. Please choose again.");
       callback();
       break;
   }

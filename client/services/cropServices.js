@@ -3,15 +3,20 @@ const { cropClient } = require("../clientInstances");
 const prompt = require("prompt-sync")({ sigint: true });
 
 function getWaterLevel(callback) {
-  // Retrieve sensor ID from user input
-  console.error("Test error output at the start of the script");
-  const sensorId = prompt("Enter Sensor ID (1, 2, 3, 4 or 5): ");
-  // Validate the sensor ID
-  if (!sensorId || isNaN(sensorId) || sensorId < 1 || sensorId > 5) {
-    callback(
-      "\nInvalid Sensor ID. Please enter a sensor number between 1 and 5."
-    );
-    return;
+  let sensorId;
+  let isValid = false; // Flag to check for valid input
+
+  // Loop until a valid sensor ID is entered
+  while (!isValid) {
+    sensorId = prompt("Enter Sensor ID (1, 2, 3, 4, or 5): ");
+    // Validate the sensor ID
+    if (!sensorId || isNaN(sensorId) || sensorId < 1 || sensorId > 5) {
+      console.log(
+        "\nInvalid Sensor ID. Please enter a sensor number between 1 and 5."
+      );
+    } else {
+      isValid = true; // Set flag to true if input is valid
+    }
   }
   // Call the GetWaterLevel RPC
   cropClient.GetWaterLevel({ sensorId }, (error, response) => {
@@ -26,24 +31,33 @@ function getWaterLevel(callback) {
 }
 
 function monitorTemperature(callback) {
-  console.log("\nEnter: \n1. Average Temp \n2. Week's Temp \n3. Current Temp");
-  const tempChoice = prompt("Choose an option: ");
-  let option;
-  switch (tempChoice) {
-    case "1":
-      option = "Average";
-      break;
-    case "2":
-      option = "Week";
-      break;
-    case "3":
-      option = "Today";
-      break;
-    default:
-      // Pass error to callback
-      callback(new Error("Invalid option selected"));
-      console.log("Entry must be a valid option (1, 2, or 3).");
-      return;
+  // Flag to check if the user's option is valid
+  let optionValid = false;
+  let option = null;
+
+  while (!optionValid) {
+    console.log(
+      "\nEnter: \n1. Average Temp \n2. Week's Temp \n3. Current Temp"
+    );
+    const tempChoice = prompt("Choose an option: ");
+
+    switch (tempChoice) {
+      case "1":
+        option = "Average";
+        optionValid = true; // Set flag to true to exit loop
+        break;
+      case "2":
+        option = "Week";
+        optionValid = true;
+        break;
+      case "3":
+        option = "Today";
+        optionValid = true;
+        break;
+      default:
+        console.log("Invalid entry. Please enter a valid option (1, 2, or 3).");
+        continue; // Continue the loop, asking again for a valid option
+    }
   }
   const call = cropClient.MonitorTemperature({ option });
   call.on("data", (response) => {
@@ -65,7 +79,7 @@ function monitorTemperature(callback) {
   });
   call.on("end", () => {
     console.log("Temperature monitoring ended.");
-    callback();
+    callback(null);
   });
   call.on("error", (err) => {
     console.error("Error during temperature monitoring:", err);
