@@ -44,7 +44,7 @@ function monitorTemperature(callback) {
     switch (tempChoice) {
       case "1":
         option = "Average";
-        optionValid = true; // Set flag to true to exit loop
+        optionValid = true;
         break;
       case "2":
         option = "Week";
@@ -56,7 +56,7 @@ function monitorTemperature(callback) {
         break;
       default:
         console.log("Invalid entry. Please enter a valid option (1, 2, or 3).");
-        continue; // Continue the loop, asking again for a valid option
+        continue;
     }
   }
   const call = cropClient.MonitorTemperature({ option });

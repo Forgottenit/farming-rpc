@@ -12,36 +12,35 @@ feedServer.addService(feedProto.FeedManagement.service, {
     call.on("data", (request) => {
       try {
         console.log("Received feed request:", request);
-        if (inventory[request.type] === undefined) {
+        if (!inventory[request.type]) {
           throw new Error(`No such feed type: ${request.type}`);
         }
         if (inventory[request.type] < request.quantity) {
           call.write({
-            status: `Not enough stock for ${request.type}. Available: ${
+            status: `Insufficient stock for ${request.type}. Available: ${
               inventory[request.type]
             }`,
           });
         } else {
           inventory[request.type] -= request.quantity;
           call.write({
-            status: `Processed request for ${request.quantity} units of ${
+            status: `Request has been filled: ${request.quantity} units of ${
               request.type
-            }. Remaining: ${inventory[request.type]}`,
+            }. Stock left: ${inventory[request.type]}`,
           });
         }
       } catch (err) {
-        call.write({
-          status: err.message,
-        });
+        // Error handling within the stream should notify the client of the failure
+        call.write({ status: `Error: ${err.message}` });
       }
     });
     call.on("end", () => {
-      call.end();
+      call.end(); // Ensure the stream is properly closed on the server side
     });
-  }, //ManageFeed
+  },
 
   // Implement Server-side Streaming RPC with error handling
-  GetInventory: (call, callback) => {
+  GetInventory: (callback) => {
     try {
       console.log("Fetching inventory levels");
       callback(null, { inventory: inventory });

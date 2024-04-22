@@ -47,13 +47,12 @@ function processChoice(choice, callback) {
       });
       break;
     case "4":
-      manageFeed(
-        [
-          { type: "corn", quantity: 10 },
-          { type: "hay", quantity: 15 },
-        ],
-        callback
-      );
+      manageFeed((err) => {
+        if (err) {
+          console.log("\nOperation failed: " + err.message);
+        }
+        callback();
+      });
       break;
     case "5":
       checkInventory(callback);
