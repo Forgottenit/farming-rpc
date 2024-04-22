@@ -1,7 +1,8 @@
+// require the clientInstances module to get the cropClient instance
 const { cropClient } = require("../clientInstances");
 // prompt-sync module is used to get user input from the console synchronously
 const prompt = require("prompt-sync")({ sigint: true });
-
+// Function to get water level based on user's choice
 function getWaterLevel(callback) {
   let sensorId;
   let isValid = false; // Flag to check for valid input
@@ -29,12 +30,12 @@ function getWaterLevel(callback) {
     }
   });
 }
-
+// Function to monitor temperature based on user's choice
 function monitorTemperature(callback) {
   // Flag to check if the user's option is valid
   let optionValid = false;
   let option = null;
-
+  // Loop until a valid option is entered
   while (!optionValid) {
     console.log(
       "\nEnter: \n1. Average Temp \n2. Week's Temp \n3. Current Temp"
@@ -59,6 +60,7 @@ function monitorTemperature(callback) {
         continue;
     }
   }
+  // Call the MonitorTemperature RPC with the selected option
   const call = cropClient.MonitorTemperature({ option });
   call.on("data", (response) => {
     if (option === "Week") {
@@ -77,6 +79,7 @@ function monitorTemperature(callback) {
       );
     }
   });
+  // Handle the end and error events
   call.on("end", () => {
     console.log("Temperature monitoring ended.");
     callback(null);
@@ -86,5 +89,5 @@ function monitorTemperature(callback) {
     callback(err);
   });
 }
-
+// Export the functions to be used in the main application
 module.exports = { getWaterLevel, monitorTemperature };

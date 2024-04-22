@@ -1,11 +1,13 @@
+//Get the functions for the main application
 const {
   getWaterLevel,
   monitorTemperature,
 } = require("./services/cropServices");
 const { manageFeed, checkInventory } = require("./services/feedServices");
 const { reportHealth } = require("./services/healthServices");
+//Get the readline interface
 const rl = require("./utils/readlineInterface");
-
+// Main function to display the menu and process user input
 function main() {
   console.log("\nSelect an Operation:");
   console.log("1. Get Water Levels");
@@ -19,7 +21,7 @@ function main() {
     processChoice(choice, () => main());
   });
 }
-
+// Function to process the user's choice
 function processChoice(choice, callback) {
   switch (choice) {
     case "1":
@@ -55,7 +57,12 @@ function processChoice(choice, callback) {
       });
       break;
     case "5":
-      checkInventory(callback);
+      checkInventory((err) => {
+        if (err) {
+          console.log("\nOperation failed:", err);
+        }
+        callback();
+      });
       break;
     case "6":
       console.log("\nExiting application.");

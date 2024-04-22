@@ -3,16 +3,21 @@ syntax = "proto3";
 package farm.health_management;
 
 service HealthManagement {
-  rpc ReportHealth(stream HealthReport) returns (HealthSummary) {}  // Client streaming for health reporting
+  // Client streaming for health reporting
+  rpc ReportHealth(stream HealthReport) returns (HealthSummary) {}  
 
 }
 
 // Message for reporting health status of a farm animal
 message HealthReport {
-  string reportId = 1;           // Report ID   
-  string type = 2;               // Type of animal
-  string animalId = 3;            // ID number of the animal
-  string healthDescription = 4;  // Detailed health report   
+  // Report ID 
+  string reportId = 1; 
+  // Type of animal            
+  string type = 2;   
+  // ID number of the animal            
+  string animalId = 3;   
+  // Detailed health report            
+  string healthDescription = 4;  
 }
 
 // Summary response for ReportHealth, includes a summary of all reports received
@@ -20,7 +25,9 @@ message HealthSummary {
   repeated ReportInfo reports = 1;
 }
 message ReportInfo {
-  int32 reportId = 1;  // Report number as integer
-  string details = 2;  // Details / summary of the report
+  // Report number as integer
+  int32 reportId = 1; 
+  // Summary of the report 
+  string details = 2;  
 }
 

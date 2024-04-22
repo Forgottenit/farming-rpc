@@ -1,3 +1,4 @@
+// Import the required modules
 const grpc = require("@grpc/grpc-js");
 const { feedServer, feedProto } = require("./serverInstances");
 const inventory = {
@@ -39,18 +40,29 @@ feedServer.addService(feedProto.FeedManagement.service, {
     });
   },
 
-  // Implement Server-side Streaming RPC with error handling
-  GetInventory: (callback) => {
+  // Implement Unary RPC for inventory checking
+  GetInventory: (call, callback) => {
     try {
       console.log("Fetching inventory levels");
+      // Check if the inventory data exists
+      if (!inventory) {
+        throw new Error("Inventory data not found");
+      }
+      // Return the inventory data to the client
       callback(null, { inventory: inventory });
     } catch (err) {
-      callback({
-        code: grpc.status.INTERNAL,
-        message: "Failed to fetch inventory: " + err.message,
-      });
+      // Handle any errors and send message back to the client
+      console.error("Failed to fetch inventory:", err.message);
+      callback(
+        {
+          // gRPC status code for internal server error
+          code: grpc.status.INTERNAL,
+          message: "Failed to fetch inventory: " + err.message,
+        },
+        null
+      );
     }
-  }, //GetInventory
+  },
 }); //addService
 
 // Start the server

@@ -1,3 +1,4 @@
+// Export readline interface for user input
 const readline = require("readline");
 const rl = readline.createInterface({
   input: process.stdin,

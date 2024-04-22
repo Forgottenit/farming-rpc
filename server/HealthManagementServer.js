@@ -1,3 +1,4 @@
+// Import the required modules
 const grpc = require("@grpc/grpc-js");
 const { healthServer, healthProto } = require("./serverInstances");
 
@@ -12,6 +13,7 @@ healthServer.addService(healthProto.HealthManagement.service, {
         console.log(
           `Received health report: ID=${report.reportId}, Type=${report.type}, Animal ID=${report.animalId}, Description=${report.healthDescription}`
         );
+        // Add the report to the list
         reports.push({
           reportId: report.reportId,
           details: `Type=${report.type}, Animal ID=${report.animalId}, Description=${report.healthDescription}`,
@@ -20,6 +22,7 @@ healthServer.addService(healthProto.HealthManagement.service, {
         console.error("Error processing report:", err);
       }
     });
+    // Handle the end event
     call.on("end", () => {
       try {
         console.log("Finished receiving health reports.");
@@ -29,6 +32,7 @@ healthServer.addService(healthProto.HealthManagement.service, {
         );
         callback(null, { reports: reports });
       } catch (err) {
+        // Handle any errors
         callback({
           code: grpc.status.INTERNAL,
           message: "Failed to compile health reports: " + err.message,
